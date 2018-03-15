@@ -1,0 +1,1 @@
+c:\user\U402471\PSA_Softs\wamp\bin\php\php7.0.19-NoPthreads\php.exe -S 0.0.0.0:80

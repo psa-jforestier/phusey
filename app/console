@@ -1,0 +1,276 @@
+<?php
+
+define('PHUSEY_LIB', dirname(__FILE__));
+include_once(PHUSEY_LIB."/phusey.php");
+$vuser_scenario = '';
+$action = trim(@$argv[1]); // can be an action or a scenario name
+$run = $collate = $report = false;
+$quiet = false;
+switch($action)
+{
+	case "ru":
+	case "run":
+		$run = true;
+		$vuser_scenario = trim(@$argv[2]); 
+		break;
+	case "run-collate":
+	case "ruco":
+		$run = true;
+		$collate = true;
+		$vuser_scenario = trim(@$argv[2]);
+		break;
+	case "co":
+	case "collate":
+		$collate = true;
+		$vuser_scenario = trim(@$argv[2]); 
+		break;
+	case "collate-report":
+	case "core":
+		$collate = true;
+		$report = true;
+		$vuser_scenario = trim(@$argv[2]); 
+		break;
+	case "re":
+	case "report":
+		$report = true;
+		$vuser_scenario = trim(@$argv[2]); 
+		break;
+	default:
+		$vuser_scenario = $action;
+		$run = $collate = $report = true;
+		break;
+}
+
+function show_help()
+{
+	?>
+Usage : ./phusey <action> test [options]
+<action> :
+  if no action is indicated, will execute "run", "collate" and "report" on a test
+  ru,run     : run the test
+  co,collate : collate statistics from a previous run of a test
+  re,report  : create a report from statistics from a previous run of a test
+  ruco,run-collate    : run and collate
+  core,collate-report : collate and create report
+  
+test :
+  A PHP file extending the PhuseyTest class, describing the scenario of the test.
+
+[options] :
+  --quiet : print only error or report if in stdout
+  When <action> is "run" :
+    -nw, --no-wait : run test immediately, do not wait a round time.
+  When <action> is "collate" :
+    -c, --collate-file <file.sqlite> : use this file to write collated results
+  When <action> is "report" :
+    -O, --output <file> : report file (HTML format). 
+      Default is to save report on the same directory as test, named with testName+testVersion.html.
+   	  testName, testVersion are defined on the PHP test you wrote.
+      If <file> is an existing directory, save report into this dir.
+      Use "-" to output to stdout.
+    -c, --collate-file <file.sqlite> : use this file to read collated date
+    -s-httpsteps N   : scale max of http steps
+    -s-hit N         : scale max of hits/s
+    -s-httpresults N : scale max of http result (nb of 200, 3xx ...)
+    -s-resptime N    : scale max of response time
+    -p, --precision N  : float precision (number of decimal, default 3)
+    -r, --resolution N : time resolution (default 10s)
+<?php
+}
+
+if (($run || $collate || $report) && ($vuser_scenario == ''))
+{
+	console_error(
+		"No action indicated. Please add an action (run, collate or report) and a scenario\n"
+	);
+	show_help();
+	exit(2);
+}
+
+if ($vuser_scenario == '')
+{
+	console_error(
+		"No virtual user scenario file indicated.\nPlease provide a PHP file extending a VUser class\n"
+		,1);
+}
+if (!file_exists($vuser_scenario))
+{
+	console_error(
+		"File $vuser_scenario does not exists, or unroconized action.\n", 1
+	);
+}
+
+if(console_arg_get_option(array('-h', '-help', '--help'), false, false))
+{
+	show_help();
+	exit(2);
+}
+$output = console_arg_get_option(array('-O', '--output'), true, '');
+$quiet = console_arg_get_option(array('-q', '--quiet'), false, false);
+$no_wait = console_arg_get_option(array('-nw', '--no-wait'), false, false);
+$collate_file = console_arg_get_option(array('-c', '--collate-file'), true, '');
+
+$scale_httpsteps = console_arg_get_option('-s-httpsteps', true, NULL);
+$scale_hit       = console_arg_get_option('-s-hit', true, NULL);
+$scale_httpresults = console_arg_get_option('-s-httpresults', true, NULL);
+$scale_resptime = console_arg_get_option('-s-resptime', true, NULL);
+
+$precision = console_arg_get_option(array('-p', '--precision'), true, 3);
+$resolution = console_arg_get_option(array('-r', '--resolution'), true, 10);
+
+if ($quiet === true)
+{
+	// Turn on output buffering to be very quiet
+	ob_start();
+}
+
+$res = include_once($vuser_scenario);
+
+$test = PhuseyTest::getTests();
+if (count($test) !== 1)
+	console_error("Unable to find a test in your script\n");
+
+$test = $test[0]; // Onlyone test can be registered at a time for this moment
+
+//$serializedScenario = $test->serializeScenario();
+$testidentifier = $test->getUniqueTestId();
+
+$testWorkingDir = PHUSEY_TMP.DIRECTORY_SEPARATOR.'results'.DIRECTORY_SEPARATOR.$testidentifier;
+if (!is_dir($testWorkingDir))
+	mkdir($testWorkingDir,0700, true);
+$testWorkingDir = realpath($testWorkingDir);
+if (!$quiet)
+{
+	echo "== PHUSEY : Performance and load framework ==\n";
+	echo "Action engaged : ", 
+		($run === true ? 'run ' : ''), 
+		($collate === true ? 'collate ' : ''),
+		($report === true ? 'report' : ''),
+		"\n";
+}
+$test->prepareScenario();
+
+if (!$quiet)
+	$test->printScenarioInfo();
+
+$test->prepareWorkload();
+
+if (!$quiet)
+	$test->printWorkloadInfo();
+
+if ($run === true)
+{ // Effectively run the test
+
+	// Start local system monitoring
+	$sys = new SystemLocalMonitoringThreaded(
+		new SystemLocalMonitoringTask($testWorkingDir.DIRECTORY_SEPARATOR.'localmonitoring.ser', 10)
+	);
+	$sys->start();
+	// Wait to a round 10 second before starting the test
+	if (!$no_wait)
+	{
+		$sleep = 20 + (10 * (int)(time()/10));
+		printf("%s : wait to %s to start tests at a round time...\n", date('H:i:s'), date('H:i:s',$sleep));
+		time_sleep_until($sleep);
+	}
+
+	foreach($test->workload->loads as $i=>$load)
+	{
+		printf("\n** Now running load %d\n", $load->loadid);
+		$load->execute($testidentifier, $test->scenario);
+	}
+	// Stop local system monitoring
+	printf("\n** Wait for system monitor to terminate\n");
+	$sys->callStop();
+	$sys->join(); // wait for thread to terminate
+}
+
+if ($collate_file == '')
+	$collate_file = $testWorkingDir.'/data.sqlite'; // Used for collate and report
+
+if ($collate === true)
+{ // Test should have been run previously, we can collate results
+	if (!class_exists('SQLite3')) die ("class SQLite3 is missing. Please install SQLite3 extenstion");
+	printf("** Now collating results\n");
+	$ra = new ResultAgregate(
+		$testWorkingDir.'/result_*.ser'
+	);
+	$nb = $ra->agregate($collate_file);
+	if ($nb === 0)
+	{
+		console_error(
+			"Unable to collect result from temporary files. You should run the test again.\n",
+			4
+		);
+	}
+	$ra = new ResultSystemMonitoringAgregate(
+		$testWorkingDir.DIRECTORY_SEPARATOR.'localmonitoring.ser'
+	);
+	$ra->agregate($collate_file);
+	$ra = new ResultSaveTransaction(
+		$test
+	);
+	$ra->agregate($collate_file);
+}
+
+if ($report === true)
+{ // We should have collated results
+	if (!class_exists('SQLite3')) die ("class SQLite3 is missing. Please install SQLite3 extenstion");
+	if (!$quiet)
+		printf("** Now running reporting on collated result\nCollated results : %s\n", $collate_file);
+	if (!file_exists($collate_file))
+		console_error(
+			"Unable to load collated results to create the report. File $collate_file is missing or unreadble.\n",
+			3
+		);
+	$report = new Reporting(
+		$collate_file,
+		$test
+	);
+	$report->setDecimalPrecision($precision);
+	$report->setTimeResolution($resolution);
+	$report->setScales(
+		$scale_httpsteps,
+		$scale_hit,
+		$scale_httpresults,
+		$scale_resptime
+	);
+	
+	if ($output == '-') // stdout
+	{
+		$report->save();
+	}
+	else
+	{
+		global $OUTPUT_FILE;
+		
+		if ($output == '')
+		{
+			// no filename specified, save on the same folder as the scenario
+			
+			$OUTPUT_FILE = $testWorkingDir.'/report.html';
+			$OUTPUT_FILE = $vuser_scenario.'.'.$test->getTestVersion().'.html';
+		}
+		else
+		{
+			@unlink($output);
+			$OUTPUT_FILE = $output;
+		}
+		
+		printf("Saving report to %s\n", $OUTPUT_FILE);
+		while (@ob_end_flush());
+		ob_start("save_buffer", 16 * 1024);
+		$report->save();
+		ob_end_clean();
+	}
+}
+
+function save_buffer($buffer)
+{
+	global $OUTPUT_FILE;
+	$fd = fopen($OUTPUT_FILE, 'a');
+	fputs($fd, $buffer);
+	fclose($fd);
+	return '';
+}
+

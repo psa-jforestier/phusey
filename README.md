@@ -137,6 +137,48 @@ Data accuracy
 
 Define your test scenario and workload in a PHP file. Here is a basic and minimal scenario and workload file :
 ```
+<?php
+include_once(dirname(__FILE__).'/../app/phusey.php');
+
+PhuseyTest::registerTest(new TestCase());
+class TestCase extends PhuseyTest
+{
+
+	public function getTestName()
+	{
+		return basename(__FILE__);
+	}
+	
+	public function getTestVersion()
+	{
+		return date('Ymd-His', filemtime(__FILE__));
+	}
+	public function scenario()
+	{
+		$this->scenario->dummy();
+	}
+	
+	public function workload()
+	{
+		$this->workload->singleBrowser(20); 
+		/**
+		$this->workload->singleBrowser(60); // Loop the scenario during 60s
+		$this->workload->parallelBrowsers(10, 60); // Loop the scenario in 10 browsers during 60s
+		//$this->workload->startRampingBrowsers(10, 20, 2, 60); // Start from 10 to 20 browsers (2 by 2) for a total duration of 60s (each level will have a duration of 60 / ((20 - 10) / 2) = 12s)
+		$this->workload->startRampingBrowsersWithFixedStepDuration(
+			10, 20, // Start from 10 to 20 browsers
+			2, // 2 browsers by 2 browsers
+			10 // each step will have a duration of 10s
+		); // Total duration : ( 1 + (20 - 10) / 2 ) * 10s
+		$this->workload->stopRampingBrowsersWithFixedStepDuration(
+			20,10, // Start 20 browsers to 10
+			2,    // 2 browsers by 2 browsers
+			10    // each step will have a duration of 10s
+		);
+		 */
+
+	}
+}
 
 ```
 
