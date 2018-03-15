@@ -151,41 +151,57 @@ class TestCase extends PhuseyTest
 	
 	public function getTestVersion()
 	{
-		return date('Ymd-His', filemtime(__FILE__));
+		return "V1.0";
 	}
 	public function scenario()
 	{
+		// No HTTP steps, this scenario will not connect to any website
 		$this->scenario->dummy();
 	}
 	
 	public function workload()
 	{
+		// Start a single browser for 20 seconds
 		$this->workload->singleBrowser(20); 
-		/**
-		$this->workload->singleBrowser(60); // Loop the scenario during 60s
-		$this->workload->parallelBrowsers(10, 60); // Loop the scenario in 10 browsers during 60s
-		//$this->workload->startRampingBrowsers(10, 20, 2, 60); // Start from 10 to 20 browsers (2 by 2) for a total duration of 60s (each level will have a duration of 60 / ((20 - 10) / 2) = 12s)
-		$this->workload->startRampingBrowsersWithFixedStepDuration(
-			10, 20, // Start from 10 to 20 browsers
-			2, // 2 browsers by 2 browsers
-			10 // each step will have a duration of 10s
-		); // Total duration : ( 1 + (20 - 10) / 2 ) * 10s
-		$this->workload->stopRampingBrowsersWithFixedStepDuration(
-			20,10, // Start 20 browsers to 10
-			2,    // 2 browsers by 2 browsers
-			10    // each step will have a duration of 10s
-		);
-		 */
-
 	}
 }
 
 ```
-
+### Available scenario steps
+TODO
+### Available workload
+TODO
 ## Security concerns
 
 - Test only the application you have hands on. Do not try to test Google.com or other website, you  have the risk to be blacklisted.
 - Do not make your injector plubicly available : a malicious user can start a test and you will not be warned of this. Also do not make the reports publics do prevent you from data disclosure.
+
+## How to write a good scenario
+
+First, think about what you want to test on you web application.
+
+Use a real browser with a plugin, such as HTTPFox or Firebug, to collect all HTTP transactions (GET, POST)
+Filter this transactions to keep only the one targetting your webserver. Remove transaction to Google Analytics, external CDN ect.
+Use this list of GET / POST to extend the scenario skeleton.
+
+Include pause time in the scenario, to simulate user reflexion, or a real browser waiting time.
+
+That's it, you know have your steps set. Add all the pause time to calculate the minimum duration time of your steps set.
+
+Now, think about the workload you want to simulate : define if you need a single browser looping the steps set for a long time, or some ramping users looking like a stairs, or with a linear ramp. A good workload is to have something like :
+
+1 start a single VBrowser looping the steps for a while
+
+2 start a stairs of VBrowser, with flat level, and ramp the VBrowser to what you consider as a maximum
+
+3 maintain this maximum of simultaneous VBrowser for a while
+
+4 decrease the simultaneous VBrowser to finish the descending ramp to one single VBrowser
+
+5 maintain this single VBrowser for a while
+stop
+
+with a such scenario, you will have performance measurments for low workload (step 1 ), you will measure at how many simultaneous VBrowser your performance will be degraded (step 2 and 3), and if when the heavy load is behind you, measure if your application have performance back to normal (step 4 and 5).
 
 ## TODO
 
