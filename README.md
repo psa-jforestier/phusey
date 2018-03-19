@@ -51,7 +51,7 @@ All commands to PHUSEY are using a single SH or BATCH script `phusey.sh` or `phu
   if no action is indicated, will execute "run", "collate" and "report" on a test
   ru,run     : run the test
   co,collate : collate statistics from a previous run of a test
-  re,report  : create a report from statistics from a previous run of a test
+  re,report  : create a report with statistics from a previous run of a test
   ruco,run-collate    : run and collate
   core,collate-report : collate and create report
 
@@ -105,7 +105,7 @@ Will collate statistics from a previous runned scenario and workload. Stats will
 
 `--collate-file ./data.sqlite` : change default location of the resulting SQLite file. By default, it is located on `./tmp/results/<id>/data.sqlite`
 
-### Create a report from statistics from a previous run of a test
+### Create a report from statistics with a previous run of a test
 
 `$> ./phusey.sh report [--output file.html] [--collate-file ./data.sqlite] [other options] ./path/to/test.php`
 
@@ -183,7 +183,15 @@ Here are the different methods available to write an HTTP scenario. When you wri
 When doing pattern matching, we use # as the delimiter ("#pattern#modifier"). Modifiers are "imU" : caseless, multiline, ungreedy  
 
 ### Available workload
-TODO
+Here are the different methods available to describe the workload of your scenario. When you write your own `workload()` method, you just have to use theses methods and call them from the `$this->workload` oject. All of theses methods are coded in `app/workload.php` and `app/step.php`.
+
+- `dummy()` : Do nothing. Do not send any HTTP request. Use only for demonstration purpose.
+- `singleBrowser($duration)` : Start a single browser, with scenario run for $duration seconds.
+- `parallelBrowsers($nbbrowsers, $duration)` : Start $nbbrowsers at the same time, each browser run the scenario for $duration seconds. So all browser should stop almost at the same time.
+- `startRampingBrowsers($fromnbbrowser, $tonbbrowser, $step, $duration)` : Start $fromnbbrowser to $tonbbrowser, $step at a time. The whole ramp will last for $duration seconds. Every step will have a duration of $duration / ( ($to - $from) / $step ).
+- `startRampingBrowsersWithFixedStepDuration($fromnbbrowser, $tonbbrowser, $step, $stepduration)` : Start $fromnbbrowser to $tonbbrowser, $step at a time. The whole ramp will last for $duration seconds. every step will have a duration of $duration / ( ($to - $from) / $step ).
+- `stopRampingBrowsersWithFixedStepDuration($fromnbbrowser, $tonbbrowser, $step, $stepduration)` : Start $fromnbbrowser in parallel, and stop them $step at a time to arrive to $tonbbrowser. The whole ramp will last for $duration seconds. every step will have a duration of $duration / ( ($to - $from) / $step )
+
 ## Security concerns
 
 - Test only the application you have hands on. Do not try to test Google.com or other website, you  have the risk to be blacklisted.
@@ -237,3 +245,5 @@ Use PHP7.x "ZTS (Zend Thread Safe)"
 Download pthread libs here : http://windows.php.net/downloads/pecl/releases/pthreads/ (chose last version) . Use correct 32 vs 64 lib.
 Copy pthreadVC2.dll in same dir as php.exe, php_pthreads.dll in ext/ dir of PHP.
 Modifiy php.ini and add extension=php_pthreads.dll
+
+Icon inspired by [https://www.iconfinder.com/jerrylow]

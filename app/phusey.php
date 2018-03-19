@@ -18,6 +18,10 @@ define('PHUSEY_TMP', dirname(__FILE__).'/../tmp');
 define('PHUSEY_MAX_BODY_SIZE', 1024); // Maximum size of recorded body
 define('PHUSEY_ERROR_TRIGGERED', 1);
 
+/**
+ * This is the ancestor class of a scenario and a workload. 
+ * Extend this class and override some functions. 
+ */
 class PhuseyTest
 {
 	public static $tests = array();
@@ -42,19 +46,37 @@ class PhuseyTest
 		throw new PhuseyException("You must implement workload() function in your test class derivated from PhuseyTest");
 	}
 	
+	/**
+	 * Override this function in your test script.
+	 * Return a string of the readable test name.
+	 */
 	protected function getTestName()
 	{
 		throw new PhuseyException("You must implement getTestName() function in your test class derivated from PHuseyTest");
 	}
 	
+	/**
+	 * Override this function in your test script.
+	 * Return a string of the readable test name.
+	 * The version can be based on save date of the scenario
+	 *  return date('Ymd-His', filemtime(__FILE__));
+	 * Return version based on file content
+	 *  return md5(file_get_contents(__FILE__));
+	 */
 	protected function getTestVersion()
 	{
 		throw new PhuseyException("You must implement getTestVersion() function in your test class derivated from PhuseyTest");
 	}
 	
+	/**
+	 * Add a test into the test list. For the moment, only one test at a time is supported
+	 */
 	public static function registerTest(PhuseyTest $test)
 	{
-		self::$tests[] = $test;
+		if (count(self::$tests) >= 1)
+		throw new PhuseyException("You cant register several test. Only one test is supported.");
+		else
+			self::$tests[] = $test;
 	}
 	public static function getTests()
 	{
@@ -66,6 +88,9 @@ class PhuseyTest
 		$this->scenario(); // This method is defined in the test file
 	}
 	
+	/**
+	 * Print to stdout a readable description of the scenario
+	 */
 	public function printScenarioInfo()
 	{
 		$nbhttp = 0;
@@ -106,6 +131,9 @@ class PhuseyTest
 		$this->workload(); // Call this method defined in the test file
 	}
 	
+	/**
+	 * Print to stdout a readable description of the workload
+	 */
 	public function printWorkloadInfo()
 	{
 		$totalduration = 0;
@@ -131,10 +159,7 @@ class PhuseyTest
 		);
 		return $h;
 	}
-	
-	
-	
-	
+		
 	public function serializeScenario()
 	{
 		$testname = filter_filename($this->getTestName(), true);

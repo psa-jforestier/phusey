@@ -4,6 +4,15 @@ include_once('load.php');
 class Workload
 {
 	var $loads = array();
+
+	/**
+	 ** Do nothing. Do not send any HTTP request. Use only for demonstration purpose.
+	 **/
+	public function dummy()
+	{
+		;
+	}
+
 	/**
 	 ** Start a single browser, with scenario run for $duration seconds
 	 **/
@@ -53,15 +62,11 @@ class Workload
 	}
 	
 	/**
-	 **   $from = 5 ; $to = 3 ; $step = 1 ; $dur=2
-	5|WW....
-	4|WWWW..
-	3|WWWWWW
-	2|WWWWWW
-	1|WWWWWW
-	 +------
-	 |123456
-	 **
+	 ** Start $fromnbbrowser in parallel, and stop them $step at a time
+	 ** to arrive to $tonbbrowser.
+	 ** The whole ramp will last for $duration seconds.
+	 ** every step will have a duration of 
+	 ** $duration / ( ($to - $from) / $step )
 	 **/
 	public function stopRampingBrowsersWithFixedStepDuration($fromnbbrowser, $tonbbrowser, $step, $stepduration)
 	{

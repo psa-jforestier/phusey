@@ -49,7 +49,7 @@ Usage : ./phusey <action> test [options]
   if no action is indicated, will execute "run", "collate" and "report" on a test
   ru,run     : run the test
   co,collate : collate statistics from a previous run of a test
-  re,report  : create a report from statistics from a previous run of a test
+  re,report  : create a report with statistics from a previous run of a test
   ruco,run-collate    : run and collate
   core,collate-report : collate and create report
   

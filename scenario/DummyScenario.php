@@ -35,7 +35,8 @@ class TestCase extends PhuseyTest
 	 */
 	public function scenario()
 	{
-		$this->scenario->get("http://www.thissitedonotexists.com/");
+		//$this->scenario->get("http://www.thissitedonotexists.com/");
+		$this->scenario->dummy();
 	}
 	
 	/**
@@ -43,7 +44,7 @@ class TestCase extends PhuseyTest
 	 */
 	public function workload()
 	{
-		$this->workload->singleBrowser(10); 
+		$this->workload->dummy();
 	}
 }
 

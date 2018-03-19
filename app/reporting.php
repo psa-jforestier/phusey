@@ -225,7 +225,10 @@ class Reporting
             echo "</tr>\n";
             $sum += $row['nb'];
         }
-        echo "<tr><th>Sum</th><th align=right>$sum</th><th></th><th>", sprintf("%.2f", ($sum / $res1['duration'])),"</th></tr>";
+        if ($res1['duration'] == 0 )
+            echo "<tr><th>Invalid duration</th></tr>";
+        else
+            echo "<tr><th>Sum</th><th align=right>$sum</th><th></th><th>", sprintf("%.2f", ($sum / $res1['duration'])),"</th></tr>";
         echo "</table>\n";
         ?>
         </div>
