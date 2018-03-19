@@ -168,7 +168,20 @@ class TestCase extends PhuseyTest
 
 ```
 ### Available scenario steps
-TODO
+
+Here are the different methods available to write an HTTP scenario. When you write your own `scenario()` method, you just have to use theses methods and call them from the `$this->scenario` oject. All of thess methods are coded in `app/scenario.php` and `app/step.php`.
+
+- `timeout($t)` : Set an expiration timeout, in second. Any http request will be aborted when timeout occur. Steps failed by timeout will have a result code of "0" (network error).
+- `clearCookie()` : Clear cookies of the virtual browser. Only the cookies of the current running browser are cleared, all parallel browsers keep their cookies.
+- `get($url)` : Do an HTTP GET on the provided URL, and record response time and other HTTP metrics.
+- `post($url, $params = array())` : Do an HTTP POST to the provided URL, with eventully some parameters. Record response time and other HTTP metrics. Parameters can be a string (like "key=val&" or "{k:v}" or an array (will be converted to "key=val&")
+- `startTransaction($name)` : Start a new transaction with a given name. Transaction are only here to classify or group your steps.  Starting a transaction do not send any HTTP request. Normally, you should not emebed transaction into an already open transaction. Any started transaction must be stopped by calling `stopTransaction()`. When statistics are computed, all response time of steps inside a transaction are cumulated.
+- `stopTransaction()` : Stop the current transaction. It doesnt send any HTTP request.
+- `pause($timems)` : Pause the scenario for a given amount of milliseconds. The pause can be an integer or a float, but accuracy is not guaranted under 1 ms.
+- `dummy()` : Do nothing. Do not send any HTTP request. Use only for demonstration purpose.
+- `triggerASoftwareErrorIfBodyContains(array $regexps)` : Will trigger a software error if a line (delimited by \n) of the body response	match one of the regexps. Match do not take care of char case. Each regexps of the array can use PHP regexp pattern http://php.net/manual/function.preg-match.php
+When doing pattern matching, we use # as the delimiter ("#pattern#modifier"). Modifiers are "imU" : caseless, multiline, ungreedy  
+
 ### Available workload
 TODO
 ## Security concerns
