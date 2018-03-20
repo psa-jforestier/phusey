@@ -42,6 +42,7 @@ class SystemLocalMonitoringTask extends Threaded
 			$fd = fopen($this->file, 'a');
 			fputs($fd, "$now;".date('c', $now).";${load[0]};${load[1]};${load[2]}\r\n");
 			fclose($fd);
+			sleep(1); // Need to sleep at least 1s, because on fast Linux, $waitto can result in too short sleep time
 			@time_sleep_until($waitto);
 		}
 		printf("Monitoring of local system stoped\n");
