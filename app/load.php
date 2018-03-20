@@ -92,15 +92,13 @@ class LoadParallelBrowsers extends Load
 				$nb0xx = $nb0xx + @$r['0XX']; // Software triggered error
 				$nbrunnedscenario += $t->getNbRunnedScenario();
 			}
-			printf("%3d %% | Running %4d scenario at %6.3f hits/s | % 4d http transaction with %4d net errors, %4d 2/3XX status, %4d 4/5XX errors, %4d soft errors\r", 
+			printf("%3d %% | Running %4d scenario at %6.3f hits/s | % 4d http transaction (%4d ok, %4d failed)\r", 
 				100 * ($elapsed / $this->duration),
 				$nbrunnedscenario,
 				$nbhttptr / $elapsed,
 				$nbhttptr,
-				$nbneterr,
 				$nb2xx3xx,
-				$nb4xx5xxerr,
-				$nb0xx
+				$nbneterr + $nb4xx5xxerr + $nb0xx
 			);
 			if ( $this->duration - $elapsed < 2 && $sleep != USLEEP_100MS )
 				// Only 2 seconds lefts !
