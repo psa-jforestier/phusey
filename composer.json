@@ -1,3 +1,8 @@
 {
-
+    "require": {
+      "php": ">=7.0.0",
+      "ext-curl": "*",
+      "ext-sqlite3": "*",
+      "ext-pthreads": "*"
+    }
 }
