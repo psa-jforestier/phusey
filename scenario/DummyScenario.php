@@ -2,7 +2,9 @@
 /**
  * This is a dummy scenario, it doesnt do anything interesting. Use it as a skeleton to start a new scenario.
  */
-include_once(dirname(__FILE__).'/../app/phusey.php');
+
+if (!class_exists('PhuseyTest'))
+	include_once(dirname(__FILE__).'/../app/phusey.php');
 
 PhuseyTest::registerTest(new TestCase());
 class TestCase extends PhuseyTest

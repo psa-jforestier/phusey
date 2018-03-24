@@ -3,7 +3,9 @@
  * This scenario test a malfunctionning application.
  * Start a webserver and point it to the folder in app/www-root
  */
-include_once(dirname(__FILE__).'/../app/phusey.php');
+
+if (!class_exists('PhuseyTest'))
+	include_once(dirname(__FILE__).'/../app/phusey.php');
 
 PhuseyTest::registerTest(new TestCase());
 class TestCase extends PhuseyTest

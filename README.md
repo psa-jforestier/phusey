@@ -14,7 +14,7 @@ PHUSEY will execute your scenario under the workload you defined, collect some m
 
 To work with PHUSEY, you need to have a powerfull client server dedicated to play the scenario. This server will try to overload your application, depending of the workload you defined.
 
-You need to have PHP7 and it *must* be compiled with *Zend thread safe* support and the *pthread* PHP extension. To analyze data, you must also have the *SQLite* PHP extension.
+You need to have PHP7 and it *must* be compiled with *Zend thread safe* support and the *pthread* PHP extension. To analyze data, you must also have the *SQLite* PHP extension. Please note that a Docker image is provided. See below.
 
 The client server need to have HTTP access to the application you want to test. It can be hosted behind a firewall.
 
@@ -223,6 +223,10 @@ Now, think about the workload you want to simulate : define if you need a single
 stop
 
 with a such scenario, you will have performance measurments for low workload (step 1 ), you will measure at how many simultaneous VBrowser your performance will be degraded (step 2 and 3), and if when the heavy load is behind you, measure if your application have performance back to normal (step 4 and 5).
+
+## Docker image
+
+A Dockerfile is provided, it allows to run Phusey inside a container with all dependecies. See file Dockerfile and phusey_docker.sh.
 
 ## TODO
 
