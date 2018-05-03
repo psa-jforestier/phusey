@@ -143,7 +143,7 @@ class CURL
 	}
 	
 	/**
-	 ** if $params is an arrau, post will be in multipart
+	 ** if $params is an array, post will be in multipart
 	 **/
 	public function post($url, $params)
 	{
