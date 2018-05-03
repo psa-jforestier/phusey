@@ -114,7 +114,7 @@ class PhuseyTest
 				$sumpause += $step->pausems;
 				$info = $step->pausems;
 			}
-			printf("%3d\t%-16s\t%s\n", $i+1, $step->explain(), $info);
+			printf("%3d\t%-12s\t%s\n", $i+1, $step->explain(), $info);
 			
 		}
 		if ($sumpause == 0)

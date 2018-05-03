@@ -8,7 +8,7 @@ class Step
 	}
 	public function explain()
 	{
-		throw new Exception('explain() must be implemented on class '.get_class($this));
+		throw new Exception('explain() must be implemented on class '.get_class($this).' and must return a string of 12 char length max');
 	}
 	public function __toString()
 	{
