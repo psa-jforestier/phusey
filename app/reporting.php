@@ -133,7 +133,7 @@ class Reporting
 	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
 	// Load the Visualization API and the piechart package.
-	    google.charts.load('current', {packages: ['corechart', 'line', 'scatter']});
+	    google.charts.load('current', {packages: ['corechart', 'line', 'scatter', 'bar']});
         // Global data used by the charts
         var ORIGIN_DATA = new Date('Jan 01 2000').getTime();
         var elapsedFormatter = null;
@@ -466,6 +466,7 @@ function print_response_time_by_transactions_during_test() {
                             role: "annotation"}
                     ]);
             var options = {
+                bars: 'horizontal',
                 fontSize : 10,
                 chartArea: {width: '70%'},
                 legend: { position: 'top' },
@@ -490,8 +491,8 @@ function print_response_time_by_transactions_during_test() {
                     <?=ifNotNull("1 : { maxValue: %d},", $this->scale_httpsteps)?>
                 }
             };
-            var chart = new google.visualization.BarChart(document.getElementById("print_response_time_by_transactions_chart"));
-	        chart.draw(view, options);
+            var chart = new google.charts.Bar(document.getElementById("print_response_time_by_transactions_chart"));
+	        chart.draw(view, google.charts.Bar.convertOptions(options));
         }
         </script>
         <?php
@@ -554,6 +555,7 @@ function print_response_time_by_transactions_during_test() {
                             role: "annotation"}
                     ]);
             var options = {
+                bars: 'horizontal',
                 fontSize : 10,
                 chartArea: {width: '70%'},
                 legend: { position: 'top' },
@@ -578,8 +580,8 @@ function print_response_time_by_transactions_during_test() {
                     <?=ifNotNull("1 : { maxValue: %d},", $this->scale_httpsteps)?>
                 }
             };
-            var chart = new google.visualization.BarChart(document.getElementById("print_response_time_by_steps_chart"));
-	        chart.draw(view, options);
+            var chart = new google.charts.Bar(document.getElementById("print_response_time_by_steps_chart"));
+	        chart.draw(view, google.charts.Bar.convertOptions(options));
         }
         </script>
         <?php
