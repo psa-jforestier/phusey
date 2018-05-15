@@ -67,15 +67,17 @@ class StepHttpGetDummy extends StepHttp
 
 class StepHttpGet extends StepHttp
 {
-	public function __construct($url)
+    var $headers = array();
+	public function __construct($url, $headers)
 	{
-		$this->url = $url;
+        $this->url = $url;
+        $this->headers = $headers;
 	}
 	public function execute($p)
 	{
 		if ($p instanceof Curl)
 		{
-			return $p->get($this->url);
+			return $p->get($this->url, $this->headers);
 		}
 		else
 			return null;
@@ -89,17 +91,19 @@ class StepHttpGet extends StepHttp
 
 class StepHttpPost extends StepHttp
 {
-	var $params = array();
-	public function __construct($url, $params)
+    var $params = array();
+    var $headers = array();
+	public function __construct($url, $params, $headers)
 	{
 		$this->url = $url;
-		$this->params = $params;
+        $this->params = $params;
+        $this->headers = $headers;
 	}
 	public function execute($p)
 	{
 		if ($p instanceof Curl)
 		{
-			return $p->post($this->url, $this->params);
+			return $p->post($this->url, $this->params, $this->headers);
 		}
 		else
 			return null;

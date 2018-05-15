@@ -26,19 +26,21 @@ class Scenario
 	
 	/**
 	 * Do an HTTP GET on the provided URL, and record response time and other HTTP metrics.
+     * If headers is present, replace all HTTP headers by them.
 	 */
-	public function get($url)
+	public function get($url, $headers = array())
 	{
-		$this->steps[] = new StepHttpGet($url);
+		$this->steps[] = new StepHttpGet($url, $headers);
 	}
 	
 	/**
 	 * Do an HTTP POST to the provided URL, with eventully some parameters. Record response time and other HTTP metrics.
-	 * Parameters can be a string (like "key=val&" or "{k:v}" or an array (will be converted to "key=val&")
+	 * Parameters can be a string (like "key=val&" or "{k:v}" or an array (will be converted to "key=val&").
+     * If headers is present, replace all HTTP headers by them.
 	 */
-	public function post($url, $params = array())
+	public function post($url, $params = array(), $headers = array())
 	{
-		$this->steps[] = new StepHttpPost($url, $params);
+		$this->steps[] = new StepHttpPost($url, $params, $headers);
 	}
 	
 	/**

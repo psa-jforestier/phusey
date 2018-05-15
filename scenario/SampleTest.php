@@ -31,7 +31,7 @@ class TestCase extends PhuseyTest
 		$this->scenario->clearCookie();
 		$this->scenario->triggerASoftwareErrorIfBodyContains(['.*Notice.*on line.*', '.*Warning.*on line.*']);
 		$this->scenario->startTransaction("Transac1");
-		$this->scenario->get("$urlbase/index.php?speed=fast");
+		$this->scenario->get("$urlbase/index.php?speed=fast", array('X-Header: Value'));
 		$this->scenario->stopTransaction();
 		$this->scenario->startTransaction("Transac2");
 		$this->scenario->get("$urlbase/index.php?speed=slow_randomized&from=0.100&to=3.000");

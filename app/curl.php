@@ -113,7 +113,7 @@ class CURL
 	{
 		$this->curlopt = $this->curlopt + $opts;
 	}
-	public function get($url)
+	public function get($url, $headers = array())
 	{
 		global $VERBOSE;
 		if ($VERBOSE === true)
@@ -124,7 +124,12 @@ class CURL
 		$this->result = new CURLHttpResult();
 		$this->result->http_method = 'G';
 		$this->result->url = $url;
-		curl_setopt_array($this->ch, $this->curlopt);
+        curl_setopt_array($this->ch, $this->curlopt);
+        if (count($headers) > 0)
+        {
+            $h = $this->curlopt[CURLOPT_HTTPHEADER];
+            curl_setopt($this->ch, CURLOPT_HTTPHEADER, array_merge($h, $headers));
+        }
 		curl_setopt($this->ch, CURLOPT_URL, $url);
 		$this->result->starttime = time();
 		$this->result->beforecall = microtime(true);
@@ -145,8 +150,9 @@ class CURL
 	/**
 	 ** if $params is an array, post will be in multipart
 	 **/
-	public function post($url, $params)
+	public function post($url, $params, $headers = array())
 	{
+
 		global $VERBOSE;
 		if ($VERBOSE === true)
 		{
@@ -156,7 +162,12 @@ class CURL
 		$this->result = new CURLHttpResult();
 		$this->result->http_method = 'P';
 		$this->result->url = $url;
-		curl_setopt_array($this->ch, $this->curlopt);
+        curl_setopt_array($this->ch, $this->curlopt);
+        if (count($headers) > 0)
+        {
+            $h = $this->curlopt[CURLOPT_HTTPHEADER];
+            curl_setopt($this->ch, CURLOPT_HTTPHEADER, array_merge($h, $headers));
+        }
 		curl_setopt($this->ch, CURLOPT_POST, true);
 		curl_setopt($this->ch, CURLOPT_POSTFIELDS , $params);
 		curl_setopt($this->ch, CURLOPT_URL, $url);
@@ -172,7 +183,7 @@ class CURL
 		else
 			$this->result->responseBody = $r;
 		$this->result->info = curl_getinfo($this->ch);
-		$this->result->http_code = $this->result->info['http_code'];
+        $this->result->http_code = $this->result->info['http_code'];
 		return $this->result;
 	}
 	
