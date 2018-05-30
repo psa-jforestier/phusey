@@ -64,8 +64,6 @@ class LoadParallelBrowsers extends Load
 		}
 		printf("Let the threads run for %d seconds...\n", $this->duration);
 		$begining = microtime(true);
-		$results = array();
-		$nbloop = 0;
 		if ($this->duration > 120)
 			$sleep = USLEEP_10S; // If test duration > 2mn, update stats every 10s
 		else
@@ -151,11 +149,8 @@ class LoadStartRampingBrowsersWithFixedStepDuration extends Load
 			}
 			else
 			{
-				if ($i > $this->fromnbbrowser)
-				{
-					$n = round(($i - $this->fromnbbrowser) / $this->step);
-					$delay = $n * $this->stepduration;
-				}
+                $n = round(($i - $this->fromnbbrowser) / $this->step);
+                $delay = $n * $this->stepduration;
 			}
 			$t = new BrowserThreaded(
 				new BrowserTask($testidentifier, $scenario, $this, $i, $delay, 0)
@@ -220,7 +215,8 @@ class LoadStopRampingBrowsersWithFixedStepDuration extends Load
 
 	public function execute($testidentifier, $scenario)
 	{
-		printf("Preparing %d threads\n", $this->nbbrowsers);
+        printf("Preparing %d threads\n", $this->nbbrowsers);
+        $threads = array();
 		for($i = $this->fromnbbrowser; $i >= 1 ; $i --)
 		{
 			$delay = 4;
