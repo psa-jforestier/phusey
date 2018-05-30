@@ -139,7 +139,8 @@ class LoadStartRampingBrowsersWithFixedStepDuration extends Load
 	}
 	public function execute($testidentifier, $scenario)
 	{
-		printf("Preparing %d threads\n", $this->nbbrowsers);
+        printf("Preparing %d threads\n", $this->nbbrowsers);
+        $threads = array();
 		for($i = 1; $i <= $this->tonbbrowser; $i ++)
 		{
 			if ($i <= $this->fromnbbrowser)

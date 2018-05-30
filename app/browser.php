@@ -90,7 +90,7 @@ class BrowserTask extends Threaded
 			$curl = new CURL();
 			$curl->setTimeout($this->scenario->timeout);
 			$curl->setCookieJar(PHUSEY_TMP."/cookie.".$this->threadnumber.".txt");
-			$resultToSave = array();
+			$this->resultsToSave = array();
 			foreach($this->scenario->steps as $i=>$step)
 			{
 				$this->_currentStep = "Step ".($i+1).' '.get_class($step);
