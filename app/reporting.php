@@ -348,7 +348,6 @@ function print_response_time_by_transactions_during_test() {
     var joinedData = null;
     var cols_to_merge = [];
     <?php
-    $nb_cols_to_merge = 3;
     foreach($responsetimeByTr as $transacid=>$rows)
     {
         $transacname = $visitedtransactions[$transacid]['name'];
@@ -403,7 +402,7 @@ function print_response_time_by_transactions_during_test() {
 
     public function print_response_time_by_transactions()
     {
-        $steps = $this->get_visited_steps();
+       
         $p = $this->precision;
         echo "<h1>Response time by transactions</h1>\n";
         echo "<div class='info'>Min, avg and max time, in seconds, of HTTP steps grouped by transaction. Times are computed by adding all min/avg/max time of HTTP steps of a transaction.</div>";
