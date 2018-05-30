@@ -10,7 +10,7 @@ if (!function_exists('sys_getloadavg'))
 		function sys_getloadavg()
 		{
 			$cmd = 'wmic cpu get loadpercentage';
-			$r = exec($cmd, $output, $ret);
+			exec($cmd, $output, $ret);
 			$load = 0.0 + $output[1];
 			return array(0=>$load, 1=>$load, 2=>$load);
 		}
@@ -39,9 +39,12 @@ class SystemLocalMonitoringTask extends Threaded
 			$now = time();
 			$waitto = $this->frequency + ($this->frequency * (int)($now/$this->frequency));
 			$load = sys_getloadavg();
-			$fd = fopen($this->file, 'a');
-			fputs($fd, "$now;".date('c', $now).";${load[0]};${load[1]};${load[2]}\r\n");
-			fclose($fd);
+            $fd = fopen($this->file, 'a');
+            if ($fd !== false)
+            {
+			    fputs($fd, "$now;".date('c', $now).";${load[0]};${load[1]};${load[2]}\r\n");
+                fclose($fd);
+            }
 			sleep(1); // Need to sleep at least 1s, because on fast Linux, $waitto can result in too short sleep time
 			@time_sleep_until($waitto);
 		}
