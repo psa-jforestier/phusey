@@ -91,7 +91,7 @@ if (!hasColorSupport())
 
 	function console_ok($msg)
 	{
-		fwrite(STDOUT, "OK :$e"); // ✓
+		fwrite(STDOUT, "OK :$msg"); // ✓
 	}
 }
 else
@@ -121,7 +121,7 @@ else
 
 	function console_ok($msg)
 	{
-		fwrite(STDOUT, "\033[92$e\033[0m");
+		fwrite(STDOUT, "\033[92$msg\033[0m");
 	}
 
 }
