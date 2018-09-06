@@ -239,6 +239,8 @@ Collector : AWS collect memory usage and IO of host (Elastic Beanstalk and EC2, 
 
 SLA : add SLA management (considere a step in error if time is higher than a threshold)
 
+CODE IMPROVEMENT : use https://github.com/docopt/docopt.php as the cmd line parser
+
 ## How to contribute
 
 Branch "master" is the main develop branch.
