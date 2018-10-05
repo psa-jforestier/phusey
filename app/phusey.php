@@ -9,6 +9,7 @@ include_once('curl.php');
 include_once('result.php');
 include_once('system.php');
 include_once('reporting.php');
+include_once('aws.php');
 
 define('USLEEP_100MS', 1000 * 1000 * 0.100);
 define('USLEEP_1S',    1000 * 1000 * 1);

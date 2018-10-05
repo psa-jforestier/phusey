@@ -28,6 +28,7 @@ class Reporting
     var $test;
     var $db;
     var $starttime_ts;
+    var $endtime_ts;
     var $visitedsteps;
     var $visitedtransactions;
     static $httpcodeToStr = array( // https://fr.wikipedia.org/wiki/Liste_des_codes_HTTP
@@ -51,6 +52,9 @@ class Reporting
     var $scale_httpsteps, $scale_hit, $scale_httpresults, $scale_resptime = NULL;
     var $precision = 4;
     var $resolution = 10.0;
+
+    var $aws;
+    var $awsEC2 = false; // array or false
     /**
      * @$file : a SQLITE database file
      */
@@ -58,6 +62,7 @@ class Reporting
     {
         $this->file = $file;
         $this->test = $test;
+        $this->aws = NULL;
     }
 
     public function setScales($scale_httpsteps, $scale_hit, $scale_httpresults, $scale_resptime)
@@ -86,6 +91,22 @@ class Reporting
         // resolution is a float number in a string, used by SQL queries to make float computation
         $this->resolution = sprintf("%.1f", (0.0 + $resolution)); 
     }
+
+    /**
+     * AWS $aws
+     * Array $awsEC2 : array of string "instanceID[,region,[profile]]"
+     */
+    public function setAWSEC2(\AWS $aws, $awsEC2)
+    {
+        $this->aws = $aws;
+        $tmp = array();
+        foreach($awsEC2 as $instance)
+        {
+            $a = explode(',', $instance);
+            $tmp[] = array('id'=>$a[0], 'region'=>$a[1], 'profile'=>$a[2]);
+        }
+        $this->awsEC2 = $tmp;
+    }
     
     /**
      * @$output : file
@@ -94,9 +115,11 @@ class Reporting
     {
 
         $this->db = new SQLite3($this->file);
+        
         $this->print_header(); 
         $this->print_scenario_and_workload_info();
         $this->print_test_info();
+        /**
         $this->print_visited_steps();
         $this->print_response_time_by_steps();
         $this->print_response_time_by_transactions();
@@ -105,7 +128,12 @@ class Reporting
         $this->print_virtual_browser();
         $this->print_http_code();
         $this->print_http_stability();
-
+         */
+        if ($this->awsEC2 !== false)
+        {
+            $this->print_aws();
+            $this->print_aws_EC2();
+        }
     }
 
     private function httpcodeToColor($httpcode)
@@ -192,7 +220,7 @@ class Reporting
             results R
         ", true);
         $this->starttime_ts = $starttime_ts = strtotime($res1['starttime']);
-        $endtime_ts = $starttime_ts + $res1['duration'];
+        $this->endtime_ts = $starttime_ts + $res1['duration'];
         
         ?>
         <h1>Test summary</h1>
@@ -200,7 +228,7 @@ class Reporting
         <tr>
         <td><b>Start time :</b></td><td><?= date('c', $starttime_ts)?></td>
         <td><b>Duration :</b></td><td><?= round($res1['duration'])?> seconds (<?= secondsToHMS($res1['duration']) ?>)</td>
-        <td><b>Stop time :</b></td><td><?= date('c', $endtime_ts)?></td>
+        <td><b>Stop time :</b></td><td><?= date('c', $this->endtime_ts)?></td>
         </tr>
         </table>
         <div class="env">
@@ -977,6 +1005,37 @@ function print_http_stability() {
 }
         </script>
         <?php
+    }
+
+    public function print_aws()
+    {
+        ?>
+        <hr/>
+        <h1>AWS statistics</h1>
+        <div class="info"><?= $this->aws->version ?></div>
+        <?php
+    }
+
+    public function print_aws_EC2()
+    {
+//        aws cloudwatch get-metric-statistics --metric-name CPUUtilization --namespace AWS/EC2 --start-time 2018-10-04T00:00:00.000Z --end-time 2018-10-04T00:02:00.000Z --period 60 --statistics Average --dimensions Name=InstanceId,Value=i-0a1674b858351f1f5
+        ?>
+        <h1>CPU Utilization of EC2 instances</h1>
+        <?php
+        
+        foreach($this->awsEC2 as $instance)
+        {
+            $data = $this->aws->cloudWatchGetEC2CPUUtilization(
+                $instance['id'],
+                $instance['region'],
+                $instance['profile'],
+                $this->starttime_ts,
+                $this->endtime_ts
+            );
+            var_dump($data);
+            if ($data === false)
+                echo $this->aws->lasterror;
+        }
     }
 }
 

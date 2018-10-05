@@ -25,7 +25,8 @@ function hasColorSupport()
 function console_arg_get_option($optionName, $needValue = false, $default = null)
 {
 	global $argv;
-	$value = $default;
+    $value = $default;
+    $valueFound = array();
 	if (is_string($optionName))
 		$optionName = array($optionName);
 	foreach($optionName as $opt_name)
@@ -40,8 +41,12 @@ function console_arg_get_option($optionName, $needValue = false, $default = null
 				{
 					//$value = $argv[$i + 1];
 					//$i++;
-					if (isset($argv[$i+1]))
-						return $argv[$i+1];
+                    if (isset($argv[$i+1]))
+                    {
+                        //return $argv[$i+1];
+                        $valueFound[] = $argv[$i+1];
+
+                    }
 					else
 						return null;
 				}
@@ -53,8 +58,12 @@ function console_arg_get_option($optionName, $needValue = false, $default = null
 			}
 			$i++;
 		}
-	}
-	return $value;
+    }
+    if (count($valueFound) == 0)
+        return $value;
+    if (count($valueFound) == 1)
+        return $valueFound[0];
+    return $valueFound;
 }
 
 function console_print_if_verbose($str, $verbose)
