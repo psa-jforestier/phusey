@@ -18,6 +18,7 @@ class CURLHttpResult
 	var $beforecall; // timestamp including ms
 	var $aftercall;  // timestamp including ms
 }
+global $_CH;
 class CURL
 {
 	var $ch = null;
@@ -30,19 +31,33 @@ class CURL
 	var $result;
 	public function __construct()
 	{
-		$this->ch = curl_init();
+		//$this->ch = $this->curl_init_cached(NULL);
 		$this->curlopt = array(
+            CURLOPT_IPRESOLVE=>CURL_IPRESOLVE_V4,
 			CURLOPT_MAXREDIRS=>5,
 			CURLOPT_RETURNTRANSFER=>true,
 			CURLOPT_SSL_VERIFYHOST=>false,
 			CURLOPT_SSL_VERIFYPEER=>false,
-			CURLOPT_FOLLOWLOCATION=>true,
+            CURLOPT_FOLLOWLOCATION=>true,
+            CURLOPT_ENCODING=>'',
 			CURLOPT_USERAGENT=>'Mozilla/5.0 (PHUSEY Load Tester)',
 			CURLOPT_HTTPHEADER=>array(
 				"Cache-Control: no-cache"
 			)
 		);
-	}
+    }
+    public function curl_init_cached($url)
+    {
+        global $_CH;
+        if (!isset($_CH[$url]))
+        {
+            $ch = curl_init();
+            $_CH[$url] = $ch;
+            return $ch;
+        }
+        else
+            return $_CH[$url];
+    }
 	public function noProxyFor(array $hostnames) // array of preg expression to match with the requested hostname
 	{
 		$this->noproxyfor = $hostnames;
@@ -115,6 +130,7 @@ class CURL
 	}
 	public function get($url, $headers = array())
 	{
+        $this->ch = $this->curl_init_cached($url);
 		global $VERBOSE;
 		if ($VERBOSE === true)
 		{
@@ -144,7 +160,8 @@ class CURL
 			$this->result->responseBody = $r;
 		$this->result->info = curl_getinfo($this->ch);
 		$this->result->http_code = $this->result->info['http_code'];
-		return $this->result;
+        return $this->result;
+        
 	}
 	
 	/**
@@ -152,7 +169,7 @@ class CURL
 	 **/
 	public function post($url, $params, $headers = array())
 	{
-
+        $this->ch = $this->curl_init_cached($url);
 		global $VERBOSE;
 		if ($VERBOSE === true)
 		{

@@ -93,9 +93,15 @@ class BrowserTask extends Threaded
 			//$this->resultsToSave = array();
 			foreach($this->scenario->steps as $i=>$step)
 			{
+
 				$this->_currentStep = "Step ".($i+1).' '.get_class($step);
-				$this->_currentStepShort = 'W'; // Working
-				$result = $step->execute($curl);
+                $this->_currentStepShort = 'W'; // Working
+                
+                if ($step instanceof StepHttpGet)
+                    $result = $step->execute($curl);
+                    //$result = true;
+                else 
+                    $result = $step->execute($curl);
 				$this->_currentStepShort = 'r'; // Ready
 				$this->_currentStep = $this->_currentStep ." done";
 				if ($result instanceof CURLHttpResult)
