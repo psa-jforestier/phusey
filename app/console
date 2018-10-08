@@ -7,7 +7,8 @@ $vuser_scenario = '';
 $action = trim(@$argv[1]); // can be an action or a scenario name
 $run = $collate = $report = false;
 $quiet = false;
-$verbose = false;
+global $VERBOSE;
+
 switch($action)
 {
 	case "-h":
@@ -125,7 +126,7 @@ if(console_arg_get_option(array('-h', '-help', '--help'), false, false))
 }
 $output = console_arg_get_option(array('-O', '--output'), true, '');
 $quiet = console_arg_get_option(array('-q', '--quiet'), false, false);
-$verbose = console_arg_get_option('--verbose', false, false);
+$VERBOSE = console_arg_get_option('--verbose', false, false);
 $no_wait = console_arg_get_option(array('-nw', '--no-wait'), false, false);
 $collate_file = console_arg_get_option(array('-c', '--collate-file'), true, '');
 
