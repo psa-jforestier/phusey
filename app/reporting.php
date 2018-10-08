@@ -29,6 +29,7 @@ class Reporting
     var $db;
     var $starttime_ts;
     var $endtime_ts;
+    var $duration;
     var $visitedsteps;
     var $visitedtransactions;
     static $httpcodeToStr = array( // https://fr.wikipedia.org/wiki/Liste_des_codes_HTTP
@@ -55,6 +56,7 @@ class Reporting
 
     var $aws;
     var $awsEC2 = false; // array or false
+    var $awsEC2Metrics = false; // array or false
     /**
      * @$file : a SQLITE database file
      */
@@ -94,18 +96,22 @@ class Reporting
 
     /**
      * AWS $aws
-     * Array $awsEC2 : array of string "instanceID[,region,[profile]]"
+     * Array $awsEC2 : array of array of string "instanceID[,region,[profile]]"
+     * Array $awsEC2Metrics : string "CloudwatchMetric1[,CloudwatchMetric2...]"
      */
-    public function setAWSEC2(\AWS $aws, $awsEC2)
+    public function setAWSEC2(\AWS $aws, $awsEC2, $awsEC2Metrics)
     {
         $this->aws = $aws;
         $tmp = array();
         foreach($awsEC2 as $instance)
         {
             $a = explode(',', $instance);
-            $tmp[] = array('id'=>$a[0], 'region'=>$a[1], 'profile'=>$a[2]);
+            $tmp[] = array('id'=>$a[0], 'region'=>@$a[1], 'profile'=>@$a[2]);
         }
         $this->awsEC2 = $tmp;
+        $tmp = array();
+        $tmp = explode(',', $awsEC2Metrics);
+        $this->awsEC2Metrics = $tmp;
     }
     
     /**
@@ -123,7 +129,9 @@ class Reporting
         $this->print_visited_steps();
         $this->print_response_time_by_steps();
         $this->print_response_time_by_transactions();
+         */
         $this->print_response_time();
+        /*
         $this->print_response_time_by_transactions_during_test();
         $this->print_virtual_browser();
         $this->print_http_code();
@@ -132,7 +140,10 @@ class Reporting
         if ($this->awsEC2 !== false)
         {
             $this->print_aws();
-            $this->print_aws_EC2();
+            foreach($this->awsEC2Metrics as $metricname)
+            {
+                $this->print_aws_EC2($metricname);
+            }
         }
     }
 
@@ -163,7 +174,7 @@ class Reporting
 	// Load the Visualization API and the piechart package.
 	    google.charts.load('current', {packages: ['corechart', 'line', 'scatter', 'bar']});
         // Global data used by the charts
-        var ORIGIN_DATA = new Date('Jan 01 2000').getTime();
+        var ORIGIN_DATA = new Date('Jan 01 2000').getTime(); // In microsecond
         var elapsedFormatter = null;
         function elapsedFormat(data)
         {
@@ -221,13 +232,17 @@ class Reporting
         ", true);
         $this->starttime_ts = $starttime_ts = strtotime($res1['starttime']);
         $this->endtime_ts = $starttime_ts + $res1['duration'];
+        $this->duration = $res1['duration'];
         
         ?>
+    <script type="text/javascript">
+        var END_DATA = ORIGIN_DATA + (1000 * <?=$this->duration?>); 
+    </script>
         <h1>Test summary</h1>
         <table border="1">
         <tr>
-        <td><b>Start time :</b></td><td><?= date('c', $starttime_ts)?></td>
-        <td><b>Duration :</b></td><td><?= round($res1['duration'])?> seconds (<?= secondsToHMS($res1['duration']) ?>)</td>
+        <td><b>Start time :</b></td><td><?= date('c', $this->starttime_ts)?></td>
+        <td><b>Duration :</b></td><td><?= round($this->duration)?> seconds (<?= secondsToHMS($this->duration) ?>)</td>
         <td><b>Stop time :</b></td><td><?= date('c', $this->endtime_ts)?></td>
         </tr>
         </table>
@@ -249,14 +264,14 @@ class Reporting
             echo "<td style='background-color:".$this->httpcodeToColor($row['http_code']) ."'>${row['http_code']} ", $this->httpcodeToStr($row['http_code']) ,"</td>\n";
             echo "<td class='right'>${row['nb']}</td>\n";
             echo "<td class='right smaller'>". round(100*$row['percentage'])."</td>\n";
-            echo "<td class='right'>", sprintf("%.2f", ($row['nb'] / $res1['duration'])) ,"</td>\n";
+            echo "<td class='right'>", sprintf("%.2f", ($row['nb'] / $this->duration)) ,"</td>\n";
             echo "</tr>\n";
             $sum += $row['nb'];
         }
-        if ($res1['duration'] == 0 )
+        if ($this->duration == 0 )
             echo "<tr><th>Invalid duration</th></tr>";
         else
-            echo "<tr><th>Sum</th><th align=right>$sum</th><th></th><th>", sprintf("%.2f", ($sum / $res1['duration'])),"</th></tr>";
+            echo "<tr><th>Sum</th><th align=right>$sum</th><th></th><th>", sprintf("%.2f", ($sum / $this->duration)),"</th></tr>";
         echo "</table>\n";
         ?>
         </div>
@@ -418,7 +433,7 @@ function print_response_time_by_transactions_during_test() {
         chartArea: {width: "90%", height: "70%", left:80},
         lineWidth:1,
         hAxis: {
-            title: 'Elapsed time', format: 'mm:ss'
+            title: 'Elapsed time', format: 'mm:ss', minValue:new Date(ORIGIN_DATA), maxValue:new Date(END_DATA)
         },
         <?=ifNotNull("vAxis : { maxValue: %d},", $this->scale_resptime)?>
         intervals: { 'style':'area' },lineWidth: 1,
@@ -712,7 +727,7 @@ function print_http_code() {
         chartArea: {width: "90%", height: "70%", left:80},
         lineWidth:1,
         hAxis: {
-            title: 'Elapsed time', format: 'mm:ss'
+            title: 'Elapsed time', format: 'mm:ss', minValue:new Date(ORIGIN_DATA), maxValue:new Date(END_DATA)
         },
         vAxis: { <?=ifNotNull("maxValue: %s", $this->scale_httpresults)?> }
     };
@@ -772,7 +787,7 @@ function print_virtual_browser() {
             2: {targetAxisIndex: 1},
         },
         hAxis: {
-            title: 'Elapsed time', format: 'mm:ss'
+            title: 'Elapsed time', format: 'mm:ss', minValue:new Date(ORIGIN_DATA), maxValue:new Date(END_DATA)
         },
         vAxes: {
             0: {title: 'Nb of browser'},
@@ -833,7 +848,7 @@ function print_response_time() {
         chartArea: {width: "90%", height: "70%", left:80},
         lineWidth:1,
         hAxis: {
-            title: 'Elapsed time', format: 'mm:ss'
+            title: 'Elapsed time', format: 'mm:ss', minValue:new Date(ORIGIN_DATA), maxValue:new Date(END_DATA)
         },
     };
     elapsedFormat(data);
@@ -907,7 +922,7 @@ function print_response_time2() {
         chartArea: {width: "90%", height: "70%", left:80},
         lineWidth:1,
         hAxis: {
-            title: 'Elapsed time', format: 'mm:ss'
+            title: 'Elapsed time', format: 'mm:ss', minValue:new Date(ORIGIN_DATA), maxValue:new Date(END_DATA)
         },
     };
     elapsedFormat(data);
@@ -990,7 +1005,7 @@ function print_http_stability() {
           },
         lineWidth:1,
         hAxis: {
-            title: 'Elapsed time', format: 'mm:ss'
+            title: 'Elapsed time', format: 'mm:ss', minValue:new Date(ORIGIN_DATA), maxValue:new Date(END_DATA)
         },
         vAxes: {
             0: {title: 'HTTP Code', minValue:0, maxValue:600},
@@ -1016,26 +1031,87 @@ function print_http_stability() {
         <?php
     }
 
-    public function print_aws_EC2()
+    public function print_aws_EC2($metricname = NULL)
     {
-//        aws cloudwatch get-metric-statistics --metric-name CPUUtilization --namespace AWS/EC2 --start-time 2018-10-04T00:00:00.000Z --end-time 2018-10-04T00:02:00.000Z --period 60 --statistics Average --dimensions Name=InstanceId,Value=i-0a1674b858351f1f5
+        $googlechartwidgetname = "print_aws_ec2_".md5($metricname).'_chart';
+        $googlechartcallback = "print_aws_ec2_".md5($metricname);
         ?>
-        <h1>CPU Utilization of EC2 instances</h1>
+        <h2><?=$metricname?></h2>
+        <div id="<?=$googlechartwidgetname?>" style="width: 100%;min-height:450px;background-color:blue">Loading the graphics...</div>
         <?php
-        
+        $data_by_instances = array();
         foreach($this->awsEC2 as $instance)
         {
-            $data = $this->aws->cloudWatchGetEC2CPUUtilization(
+            $data = $this->aws->cloudWatchGetEC2Metric(
                 $instance['id'],
                 $instance['region'],
                 $instance['profile'],
                 $this->starttime_ts,
-                $this->endtime_ts
+                $this->endtime_ts,
+                $metricname
             );
-            var_dump($data);
             if ($data === false)
+            {
                 echo $this->aws->lasterror;
+                return;
+            }
+            else
+            {
+                $data_by_instances[$instance['id']] = $data;
+            }
         }
+        ?>
+<script type="text/javascript">
+google.charts.setOnLoadCallback(<?=$googlechartcallback?>);
+function <?=$googlechartcallback?>() 
+{
+    var joinedData = null;
+    var cols_to_merge = [];
+        <?php
+        $id = 0;
+        foreach($data_by_instances as $instanceId=>$data)
+        {
+            ?>
+            /** <?=htmlentities($instanceId)?> [ **/
+    var data_<?=$id?> = new google.visualization.DataTable();
+    data_<?=$id?>.addColumn('datetime', 'X');
+    data_<?=$id?>.addColumn('number', '<?=$instanceId?>');
+    data_<?=$id?>.addRows([
+            <?php
+                foreach($data as $row)
+                {
+                ?>
+
+[ new Date(ORIGIN_DATA + 1000 * <?=$row->Elapsed?> ), <?= sprintf("%3.3f", $row->Average) ?> ],
+            <?php
+                }
+                ?>
+    ]);
+            /** ] <?=htmlentities($instanceId)?>**/
+        if (joinedData == null)
+            joinedData = data_<?=$id?>;
+        else
+            joinedData = google.visualization.data.join(joinedData, data_<?=$id?>, 'full', [[0, 0]], cols_to_merge, [1]);
+        cols_to_merge.push(cols_to_merge.length + 1);
+            <?php
+            $id++;
+        }
+        ?>
+var options = {
+    legend: { position: 'top', alignment: 'start', textStyle: { fontSize: 10} },
+    chartArea: {width: "90%", height: "70%", left:80},
+    lineWidth:1,
+    hAxis: {
+        title: 'Elapsed time', format: 'mm:ss', minValue:new Date(ORIGIN_DATA), maxValue:new Date(END_DATA)
+    },
+    
+    intervals: { 'style':'area' },lineWidth: 1,
+    
+};
+var chart = new google.visualization.LineChart(document.getElementById('<?=$googlechartwidgetname?>'));
+chart.draw(joinedData, options);
+}
+</script>
+        <?php
     }
 }
-

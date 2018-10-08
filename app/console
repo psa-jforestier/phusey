@@ -85,11 +85,14 @@ test :
     -s-resptime N    : scale max of response time
     -p, --precision N  : float precision (number of decimal, default 3)
     -r, --resolution N : time resolution (default 10s)
-    --aws-ec2 InstanceId[,region,profile]  : add a graphic with AWS EC2 metrics (CPU) collected from instances.
+    --aws-ec2 InstanceId[,region[,profile]]  : Prepare graphics from EC2 instances. Add --aws-ec2-metrics to select metrics to add.
         region : name of AWS region where the instance is located. Default is default region of the default profile.
         profile : AWS CLI profile to use (default is the default profile).
         To collect metrics from several instances, add other --aws-ec2 options
-      
+    --aws-ec2-metrics [CPUUtilization,CPUCreditBalance, ...] : Metric names as seen in CloudWatch in AWS/EC2 namespace. If not specified, use by default CPUUtilization.
+    --aws-as ASName[,region[,profile]] : prepare graphics from Auto Scaling.
+    --aws-as-metrics [GroupTotalInstances,GroupDesiredCapacity, ...] : Metric names as seen in CloudWatch in AWS/AutoScaling namespace.
+    
 <?php
 }
 
@@ -135,6 +138,7 @@ $precision = console_arg_get_option(array('-p', '--precision'), true, 3);
 $resolution = console_arg_get_option(array('-r', '--resolution'), true, 10);
 
 $aws_ec2 = console_arg_get_option('--aws-ec2', true, NULL);
+$aws_ec2_metrics = console_arg_get_option('--aws-ec2-metrics', true, 'CPUUtilization');
 if ($aws_ec2 !== NULL)
 {
 	$aws = new \AWS();
@@ -268,8 +272,10 @@ if ($report === true)
 
 	if ($aws_ec2 !== NULL)
 	{
-		$report->setAWSEC2($aws,
-			(is_string($aws_ec2) ? array($aws_ec2) : $aws_ec2 )
+		$report->setAWSEC2(
+			$aws,
+			(is_string($aws_ec2) ? array($aws_ec2) : $aws_ec2 ),
+			$aws_ec2_metrics
 		);
 	}
 	
