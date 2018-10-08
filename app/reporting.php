@@ -416,11 +416,11 @@ class Reporting
         
         echo "<h1>Response time by transactions during the test</h1>\n";
         echo "<div class='info'>Min, avg and max time, in seconds, of transaction during the whole test. Times are computed by adding all min/avg/max time of HTTP steps of a transaction.</div>";
-	if (count($visitedtransactions) == 0)
-	{
-		echo "<br><b>No transaction visited during the test.</b></br>";
-		return;
-	}
+        if (count($visitedtransactions) == 0)
+        {
+            echo "<br><b>No transaction visited during the test.</b></br>";
+            return;
+        }
         ?>
         Time resolution is : <?=$resolution?> seconds.<br/>
         <div id="print_response_time_by_transactions_during_test_chart" style="width: 100%;min-height:450px;background-color:blue">Loading the graphics...</div>
