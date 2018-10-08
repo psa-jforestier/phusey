@@ -47,6 +47,7 @@ All commands to PHUSEY are using a single SH or BATCH script `phusey.sh` or `phu
 `$> ./phusey.sh <action> test [option]`
 
 ```
+Usage : ./phusey <action> test [options]
 <action> :
   if no action is indicated, will execute "run", "collate" and "report" on a test
   ru,run     : run the test
@@ -54,29 +55,39 @@ All commands to PHUSEY are using a single SH or BATCH script `phusey.sh` or `phu
   re,report  : create a report with statistics from a previous run of a test
   ruco,run-collate    : run and collate
   core,collate-report : collate and create report
-
+  
 test :
   A PHP file extending the PhuseyTest class, describing the scenario of the test.
 
 [options] :
   --quiet : print only error or report if in stdout
+  --verbose : be verbose
+  --tmpdir : TODO set temporary directory (for intermediate data files)
   When <action> is "run" :
     -nw, --no-wait : run test immediately, do not wait a round time.
   When <action> is "collate" :
     -c, --collate-file <file.sqlite> : use this file to write collated results
   When <action> is "report" :
-    -O, --output <file> : report file (HTML format).
+    -O, --output <file> : report file (HTML format). 
       Default is to save report on the same directory as test, named with testName+testVersion.html.
-          testName, testVersion are defined on the PHP test you wrote.
+   	  testName, testVersion are defined on the PHP test you wrote.
       If <file> is an existing directory, save report into this dir.
       Use "-" to output to stdout.
     -c, --collate-file <file.sqlite> : use this file to read collated date
-    -s-httpsteps : scale max of http steps
-    -s-hit       : scale max of hits/s
-    -s-httpresults : scale max of http result (nb of 200, 3xx ...)
-    -s-resptime  : scale max of response time
-        -p, --precision : float precision (number of decimal, default 3)
-        -r, --resolution : time resolution (default 10s)
+    -s-httpsteps N   : scale max of http steps
+    -s-hit N         : scale max of hits/s
+    -s-httpresults N : scale max of http result (nb of 200, 3xx ...)
+    -s-resptime N    : scale max of response time
+    -p, --precision N  : float precision (number of decimal, default 3)
+    -r, --resolution N : time resolution (default 10s)
+    --aws-ec2 InstanceId[,region[,profile]]  : Prepare graphics from EC2 instances. Add --aws-ec2-metrics to select metrics to add.
+        region : name of AWS region where the instance is located. Default is default region of the default profile.
+        profile : AWS CLI profile to use (default is the default profile).
+        To collect metrics from several instances, add other --aws-ec2 options
+    --aws-ec2-metrics [CPUUtilization,CPUCreditBalance, ...] : Metric names as seen in CloudWatch in AWS/EC2 namespace. If not specified, use by default CPUUtilization.
+    --aws-as ASName[,region[,profile]] : prepare graphics from Auto Scaling.
+    --aws-as-metrics [GroupTotalInstances,GroupDesiredCapacity, ...] : Metric names as seen in CloudWatch in AWS/AutoScaling namespace. If not specified, use by default GroupTotalInstances.
+
 ```
 
 ### Start a test, collect metrics, and generate report
@@ -234,10 +245,9 @@ Implement functionnal error : add possibility to test if JSON or XML are well fo
 
 Logging : log response when an error occured
 
-
-Collector : AWS collect memory usage and IO of host (Elastic Beanstalk and EC2, via CloudWatch).
-
 SLA : add SLA management (considere a step in error if time is higher than a threshold)
+
+Add a statistic based on local (injector) CPU consumption
 
 CODE IMPROVEMENT : use https://github.com/docopt/docopt.php as the cmd line parser
 
