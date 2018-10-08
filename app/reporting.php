@@ -57,6 +57,8 @@ class Reporting
     var $aws;
     var $awsEC2 = false; // array or false
     var $awsEC2Metrics = false; // array or false
+    var $awsAS = false;
+    var $awsASMetrics = false;
     /**
      * @$file : a SQLITE database file
      */
@@ -113,6 +115,21 @@ class Reporting
         $tmp = explode(',', $awsEC2Metrics);
         $this->awsEC2Metrics = $tmp;
     }
+
+    public function setAWSAS(\AWS $aws, $awsAS, $awsASMetrics)
+    {
+        $this->aws = $aws;
+        $tmp = array();
+        foreach($awsAS as $as)
+        {
+            $a = explode(',', $as);
+            $tmp[] = array('id'=>$a[0], 'region'=>@$a[1], 'profile'=>@$a[2]);
+        }
+        $this->awsAS = $tmp;
+        $tmp = array();
+        $tmp = explode(',', $awsASMetrics);
+        $this->awsASMetrics = $tmp;
+    }
     
     /**
      * @$output : file
@@ -120,31 +137,39 @@ class Reporting
     public function save()
     {
 
+        $T = time();
         $this->db = new SQLite3($this->file);
         
         $this->print_header(); 
         $this->print_scenario_and_workload_info();
         $this->print_test_info();
-        /**
+        
         $this->print_visited_steps();
         $this->print_response_time_by_steps();
         $this->print_response_time_by_transactions();
-         */
         $this->print_response_time();
-        /*
         $this->print_response_time_by_transactions_during_test();
         $this->print_virtual_browser();
         $this->print_http_code();
         $this->print_http_stability();
-         */
+        
+        if ($this->awsEC2 !== false || $this->awsAS !== false)
+            $this->print_aws();
         if ($this->awsEC2 !== false)
         {
-            $this->print_aws();
             foreach($this->awsEC2Metrics as $metricname)
             {
                 $this->print_aws_EC2($metricname);
             }
         }
+        if ($this->awsAS !== false)
+        {
+            foreach($this->awsASMetrics as $metricname)
+            {
+                $this->print_aws_AS($metricname);
+            }
+        }
+        $this->print_footer($T);
     }
 
     private function httpcodeToColor($httpcode)
@@ -162,7 +187,14 @@ class Reporting
         return @Reporting::$httpcodeToStr[$httpcode];
     }
 
-
+    public function print_footer($beginTime)
+    {
+        ?>
+    <hr/>
+    Report generated at <?= date('r') ?> in <?= time() - $beginTime ?>s <br/>
+</html>
+        <?php
+    }
     public function print_header()
     {
         ?>
@@ -208,6 +240,9 @@ class Reporting
         }
         .info {
             font-size:80%;
+        }
+        h1 {
+            margin-bottom:0px;
         }
         </style>
     </head>
@@ -1033,12 +1068,6 @@ function print_http_stability() {
 
     public function print_aws_EC2($metricname = NULL)
     {
-        $googlechartwidgetname = "print_aws_ec2_".md5($metricname).'_chart';
-        $googlechartcallback = "print_aws_ec2_".md5($metricname);
-        ?>
-        <h2><?=$metricname?></h2>
-        <div id="<?=$googlechartwidgetname?>" style="width: 100%;min-height:450px;background-color:blue">Loading the graphics...</div>
-        <?php
         $data_by_instances = array();
         foreach($this->awsEC2 as $instance)
         {
@@ -1048,7 +1077,8 @@ function print_http_stability() {
                 $instance['profile'],
                 $this->starttime_ts,
                 $this->endtime_ts,
-                $metricname
+                $metricname,
+                'Average'
             );
             if ($data === false)
             {
@@ -1060,7 +1090,44 @@ function print_http_stability() {
                 $data_by_instances[$instance['id']] = $data;
             }
         }
+        $this->print_aws_metric($metricname, $data_by_instances);
+    }
+
+    public function print_aws_AS($metricname = NULL)
+    {
+        $data_by_instances = array();
+        foreach($this->awsAS as $instance)
+        {
+            $data = $this->aws->cloudWatchGetASMetric(
+                $instance['id'],
+                $instance['region'],
+                $instance['profile'],
+                $this->starttime_ts,
+                $this->endtime_ts,
+                $metricname,
+                'Average'
+            );
+            if ($data === false)
+            {
+                echo $this->aws->lasterror;
+                return;
+            }
+            else
+            {
+                $data_by_instances[$instance['id']] = $data;
+            }
+        }
+        $this->print_aws_metric($metricname, $data_by_instances);
+    }
+    
+    public function print_aws_metric($metricname = NULL, $data_by_instances)
+    {
+        $googlechartwidgetname = "print_aws_ec2_".md5($metricname).'_chart';
+        $googlechartcallback = "print_aws_ec2_".md5($metricname);
         ?>
+        <h2><?=$metricname?></h2>
+        <div id="<?=$googlechartwidgetname?>" style="width: 100%;min-height:450px;background-color:blue">Loading the graphics...</div>
+        
 <script type="text/javascript">
 google.charts.setOnLoadCallback(<?=$googlechartcallback?>);
 function <?=$googlechartcallback?>() 
@@ -1082,7 +1149,7 @@ function <?=$googlechartcallback?>()
                 {
                 ?>
 
-[ new Date(ORIGIN_DATA + 1000 * <?=$row->Elapsed?> ), <?= sprintf("%3.3f", $row->Average) ?> ],
+[ new Date(ORIGIN_DATA + 1000 * <?=$row->Elapsed?> ), <?= sprintf("%3.3f", $row->Average) ?> ], /*<?= $row->Timestamp ?> */
             <?php
                 }
                 ?>

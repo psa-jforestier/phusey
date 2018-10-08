@@ -91,7 +91,7 @@ test :
         To collect metrics from several instances, add other --aws-ec2 options
     --aws-ec2-metrics [CPUUtilization,CPUCreditBalance, ...] : Metric names as seen in CloudWatch in AWS/EC2 namespace. If not specified, use by default CPUUtilization.
     --aws-as ASName[,region[,profile]] : prepare graphics from Auto Scaling.
-    --aws-as-metrics [GroupTotalInstances,GroupDesiredCapacity, ...] : Metric names as seen in CloudWatch in AWS/AutoScaling namespace.
+    --aws-as-metrics [GroupTotalInstances,GroupDesiredCapacity, ...] : Metric names as seen in CloudWatch in AWS/AutoScaling namespace. If not specified, use by default GroupTotalInstances.
     
 <?php
 }
@@ -139,7 +139,9 @@ $resolution = console_arg_get_option(array('-r', '--resolution'), true, 10);
 
 $aws_ec2 = console_arg_get_option('--aws-ec2', true, NULL);
 $aws_ec2_metrics = console_arg_get_option('--aws-ec2-metrics', true, 'CPUUtilization');
-if ($aws_ec2 !== NULL)
+$aws_as =  console_arg_get_option('--aws-as', true, NULL);
+$aws_as_metrics = console_arg_get_option('--aws-as-metrics', true, 'GroupTotalInstances');
+if ($aws_ec2 !== NULL || $aws_as !== NULL)
 {
 	$aws = new \AWS();
 	if ($aws->isAWSCliInstalled() === false)
@@ -276,6 +278,14 @@ if ($report === true)
 			$aws,
 			(is_string($aws_ec2) ? array($aws_ec2) : $aws_ec2 ),
 			$aws_ec2_metrics
+		);
+	}
+	if ($aws_as !== NULL)
+	{
+		$report->setAWSAS(
+			$aws,
+			(is_string($aws_as) ? array($aws_as) : $aws_as ),
+			$aws_as_metrics
 		);
 	}
 	
