@@ -47,7 +47,7 @@ class CURL
 		);
     }
     public function curl_init_cached($url)
-    {
+    {/**
         global $_CH;
         if (!isset($_CH[$url]))
         {
@@ -57,6 +57,8 @@ class CURL
         }
         else
             return $_CH[$url];
+	**/
+	return curl_init();
     }
 	public function noProxyFor(array $hostnames) // array of preg expression to match with the requested hostname
 	{
