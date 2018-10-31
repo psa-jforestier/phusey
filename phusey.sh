@@ -6,4 +6,4 @@
         [[ $(type -P "php") ]] && PHPEXE="php"  || 
             { echo "PHP is NOT in PATH" 1>&2; exit 1; }
     }
-$PHPEXE app/console $*
+$PHPEXE -c phusey.php.ini app/console $*
