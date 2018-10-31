@@ -184,6 +184,9 @@ if (!$quiet)
 		($collate === true ? 'collate ' : ''),
 		($report === true ? 'report' : ''),
 		"\n";
+	echo "Injector information :\n";
+	echo "  Max execution time : ", ini_get('max_execution_time'),"\r\n";
+	echo "  Max memory         : ", ini_get('memory_limit'), "\r\n";
 }
 $test->prepareScenario();
 
