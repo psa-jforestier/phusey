@@ -12,7 +12,7 @@ class AWS
         $version = exec($cmd, $output, $ret);
         if ($ret !== 0)
         {
-            $tihs->lasterror = $version;
+            $this->lasterror = $version;
             return false;
         }
         $this->version = $version;

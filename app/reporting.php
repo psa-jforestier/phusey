@@ -126,7 +126,6 @@ class Reporting
             $tmp[] = array('id'=>$a[0], 'region'=>@$a[1], 'profile'=>@$a[2]);
         }
         $this->awsAS = $tmp;
-        $tmp = array();
         $tmp = explode(',', $awsASMetrics);
         $this->awsASMetrics = $tmp;
     }
